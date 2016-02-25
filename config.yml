@@ -1,0 +1,20 @@
+dungeons:
+  name: "Dungeons"
+  # Make layer hidden by default
+  hidebydefault: false
+  # ordering priority in layer menu (low goes before high - default is 0)
+  layerprio: 2
+  # (optional) set minimum zoom level before layer is visible (0 = defalt, always visible)
+  minzoom: 0
+  # Icon
+  icon:
+thunts:
+  name: "Treasure Hunts"
+  hidebydefault: false
+  layerprio: 3
+  minzoom: 0
+waypoints:
+  name: "Waypoints"
+  hidebydefault: true
+  layerprio: 4
+  minzoom: 3

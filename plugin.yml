@@ -1,0 +1,5 @@
+name: DynmapMCDungeon
+main: org.steveshipway.dynmap.DynmapMCDungeon
+version: 1.0
+author: sshipway
+depend: [ dynmap ]
