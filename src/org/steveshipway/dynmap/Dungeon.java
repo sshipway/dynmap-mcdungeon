@@ -93,7 +93,7 @@ public class Dungeon {
 	        			if( pagedata != null ) {
 	        				dinfo.putAll(pagedata);
 	        			} else {
-	        				log.warning("Page was unable to be unpickled: "+page);
+	        				log.warning("Page was unable to be unpickled:\n"+page);
 	        			}
                 	} catch( Exception e ) {
                 		log.warning("Unable to load page for some reason! "+e.getClass().getSimpleName());
@@ -157,13 +157,12 @@ public class Dungeon {
 
 			try {
 				if( dinfo.containsKey("landmarks") ) {
-					wp = (List<Object>)dinfo.get("landmarks");
+					wp = (List<Object>) ((HashMap<String,Object>)dinfo.get("landmarks")).values();
 				}
-				
 			} catch( Exception e ) {
         		log.warning("Problem parsing waypoints content: "+e.getClass().getSimpleName());
         		e.printStackTrace();
-        		log.info((String) dinfo.get("landmarks"));
+        		log.info( dinfo.get("landmarks").toString());
 			}
 			
         	if( (dlevels > 0) && (dname != null) ) {
@@ -215,12 +214,12 @@ public class Dungeon {
 	}
 	public String getDescription() {
 		String d;
-		d = this.name + "\n" + sizex + " x " + sizez + "\n" + levels + " lvls";
+		d = this.name + ",\n" + sizex + " x " + sizez + ",\n" + levels + " lvls";
 		return d;
 	}
 	public String getTHDescription() {
 		String d;
-		d = this.name + "\n" + this.levels + " steps";
+		d = this.name + ",\n" + this.levels + " steps";
 		return d;
 	}
 	public int getLevels() {

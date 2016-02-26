@@ -100,13 +100,14 @@ public class PickleLoader {
     	PyDictionary pickle;
     	try {
         	pickle = (PyDictionary) cPickle.loads(pstr);
-        } catch( PyException e ) {        	
-        	Pattern p = Pattern.compile("S'([a-z_]+)'",0);
+        } catch( PyException e ) {  
+        	Pattern p = Pattern.compile("S'(portal_exit|entrance_pos|pos)'",0);
         	Pattern px = Pattern.compile("S'x'\\nI(-?\\d+)",0);
         	Pattern py = Pattern.compile("S'y'\\nI(-?\\d+)",0);
         	Pattern pz = Pattern.compile("S'z'\\nI(-?\\d+)",0);
         	Matcher m = p.matcher(str);
         	if( m.find() ) {
+        		// handle Python 2.7 pickled Vec format.
         		try {
 	        		Matcher vm;
 	        		HashMap<String,Integer> vec = new HashMap<String,Integer>();
@@ -120,6 +121,7 @@ public class PickleLoader {
         		} catch( Exception ee ) {
         			log.severe("Problems trying to eat bad pickles");
         			ee.printStackTrace();
+        			return null;
         		}
         		return data;
         	} else {
@@ -127,7 +129,7 @@ public class PickleLoader {
             	return null;        	
         	}
         } catch( Exception e ) {
-        	log.warning("Unable to parse picklestring! " + e.getClass().getSimpleName());
+        	log.warning("Unable to unpickle picklestring! " + e.getClass().getSimpleName());
         	return null;
         }
     	
