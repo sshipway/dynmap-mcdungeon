@@ -17,6 +17,7 @@ public class Dungeon {
 	private int sizex;
 	private int sizez;
 	private int levels;
+	private List<Object> waypoints;
 	
 	// Static function to read the MCDungeon cache and return a list of Dungeon objects.
 	//@SuppressWarnings("unchecked")
@@ -49,6 +50,7 @@ public class Dungeon {
         	int eh = 0;
         	int x,y,z;
     		Map<String,Object> dinfo = new HashMap<String,Object>();
+    		List<Object> wp = null;
 
     		if( ! chest.getClass().getSimpleName().endsWith("HashMap") ) {
     			log.warning("Not a HashMap object in the cache: Probably the unpickling failed");
@@ -108,10 +110,13 @@ public class Dungeon {
 				if( dinfo.containsKey("full_name") ) {
 					dname = (String)dinfo.get("full_name");
 				}
-				if( dinfo.containsKey("levels") ) {
+				if( dinfo.containsKey("levels") ) { // for dungeons
 					dlevels = (Integer)dinfo.get("levels");
 				}
-				if( dinfo.containsKey("xsize") ) {
+				if( dinfo.containsKey("steps") ) { // for thunts
+					dlevels = (Integer)dinfo.get("steps");
+				}
+			    if( dinfo.containsKey("xsize") ) {
 					dx = (Integer)dinfo.get("xsize");
 				}
 				if( dinfo.containsKey("zsize") ) {
@@ -141,16 +146,28 @@ public class Dungeon {
 					y += eh;
 					z += (((HashMap<String,Integer>)(dinfo.get("entrace_pos"))).get("z") << 4) + 8;				
 				} else {
-					log.warning("Unable to identify portal exit or entrance position for dungeon '"+dname+"'");
+//					log.warning("Unable to identify portal exit or entrance position for dungeon '"+dname+"'");
+					// treasure hunt
+					x += 8; z += 8; // middle of chunk
 				}
         	} catch( Exception e ) {
         		log.warning("Problem parsing cache content (B)");
         		continue;
         	}
 
+			try {
+				if( dinfo.containsKey("landmarks") ) {
+					wp = (List<Object>)dinfo.get("landmarks");
+				}
+				
+			} catch( Exception e ) {
+        		log.warning("Problem parsing waypoints content: "+e.getClass().getSimpleName());
+        		e.printStackTrace();
+        		log.info((String) dinfo.get("landmarks"));
+			}
 			
         	if( (dlevels > 0) && (dname != null) ) {
-        		dlst.add(new Dungeon(dname,w, x,y,z ,dx,dz,dlevels));
+        		dlst.add(new Dungeon(dname,w, x,y,z ,dx,dz,dlevels,wp));
         	} else {
         		log.warning("Invalid dungeon cache ignored!");
         	}
@@ -165,6 +182,7 @@ public class Dungeon {
 		sizex = x;
 		sizez = z;
 		setLevels(lvl);
+		waypoints = null;
 	}
 	Dungeon(String n, World w, int x, int y, int z, int sx, int sz, int lvl) {
 		name = n;
@@ -172,13 +190,24 @@ public class Dungeon {
 		sizex = sx;
 		sizez = sz;
 		setLevels(lvl);
+		waypoints = null;
 	}
-	
+	Dungeon(String n, World w, int x, int y, int z, int sx, int sz, int lvl,List<Object> wp) {
+		name = n;
+		loc = new Location(w, x, y, z);
+		sizex = sx;
+		sizez = sz;
+		setLevels(lvl);
+		waypoints = wp;
+	}	
 	public Location getLocation() {
 		return loc;
 	}
+	public List<Object> getWaypoints() {
+		return waypoints;
+	}
 	public String getId() {
-		String did = this.name + this.loc.getBlockX() + "_" + this.loc.getBlockZ();
+		String did = "_mcd_" + this.name + this.loc.getBlockX() + "_" + this.loc.getBlockZ();
 		return did.replaceAll("[^0-9a-zA-Z]", "_");
 	}
 	public String getName() {
@@ -189,7 +218,11 @@ public class Dungeon {
 		d = this.name + "\n" + sizex + " x " + sizez + "\n" + levels + " lvls";
 		return d;
 	}
-
+	public String getTHDescription() {
+		String d;
+		d = this.name + "\n" + this.levels + " steps";
+		return d;
+	}
 	public int getLevels() {
 		return levels;
 	}

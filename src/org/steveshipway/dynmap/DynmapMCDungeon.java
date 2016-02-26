@@ -109,7 +109,7 @@ public class DynmapMCDungeon extends JavaPlugin {
     	if( itype == "thunts" ) {
         	deficon = "chest";
     	} else if( itype == "waypoints" ) {
-        	deficon = "walk";
+        	deficon = "star";
     	} else {
         	deficon = "tower";
     	}
@@ -124,7 +124,7 @@ public class DynmapMCDungeon extends JavaPlugin {
     // Start the plugin, populate the markers
     private void activate() {
     	int minzoom;
-    	MarkerIcon ico;
+    	MarkerIcon ico,wico;
     	
         markerapi = api.getMarkerAPI();
         if(markerapi == null) {
@@ -155,65 +155,114 @@ public class DynmapMCDungeon extends JavaPlugin {
         cfg.options().copyDefaults(true);   /* Load defaults, if needed */
         this.saveConfig();  /* Save updates, if needed */
 
-        /* Now, add marker set for dungeons (make it transient) */
-        set = markerapi.getMarkerSet("dungeons.markerset");
-        if(set == null)
-            set = markerapi.createMarkerSet("dungeons.markerset", cfg.getString("dungeons.name", "Dungeons"), null, false);
-        else
-            set.setMarkerSetLabel(cfg.getString("dungeons.name", "Dungeons"));
-        if(set == null) {
-            crit("Error creating dungeons marker set");
-            return;
-        }
-        minzoom = cfg.getInt("dungeons.minzoom", 0);
-        if(minzoom > 0)
-            set.setMinZoom(minzoom);
-        set.setLayerPriority(cfg.getInt("dungeons.layerprio", 10));
-        set.setHideByDefault(cfg.getBoolean("dungeons.hidebydefault", false));
- 
-        /* Now retrieve the dungeons list and create markers */
-        ico = getIcon("dungeons");
-        if(ico != null) {
-	        for( World world: Bukkit.getWorlds() ) {
-	        	log.info("Processing world: " + world.getName());
-		        List<Dungeon> dungeons = Dungeon.getDungeons(world, world.getWorldFolder().getPath() + File.separator + "mcdungeon_cache" + File.separator + "dungeon_scan_cache",log);
-		        if( dungeons == null ) {
-		        	log.warning("No dungeons found in world "+world.getName());
-		        } else {
-			        for( Dungeon dungeon: dungeons ) {
-				        String markid = "_mcd_" + dungeon.getName();
-				        Location blk = dungeon.getLocation();
-			            Marker dmkr = set.createMarker(markid, dungeon.getId(), world.getName(), 
-			                        blk.getX(), blk.getY(), blk.getZ(), ico, false);
-			            if(dmkr != null) {
-			            	String desc = dungeon.getDescription();
-			            	dmkr.setDescription(desc); /* Set popup */
-			            	dmkr.setLabel(dungeon.getName());
-			            }
-			            
+        if( cfg.getBoolean("dungeons.enabled", true ) ) {
+	        /* Now, add marker set for dungeons (make it transient) */
+	        set = markerapi.getMarkerSet("dungeons.markerset");
+	        if(set == null)
+	            set = markerapi.createMarkerSet("dungeons.markerset", cfg.getString("dungeons.name", "Dungeons"), null, false);
+	        else
+	            set.setMarkerSetLabel(cfg.getString("dungeons.name", "Dungeons"));
+	        if(set == null) {
+	            crit("Error creating dungeons marker set");
+	            return;
+	        }
+	        minzoom = cfg.getInt("dungeons.minzoom", 0);
+	        if(minzoom > 0)
+	            set.setMinZoom(minzoom);
+	        set.setLayerPriority(cfg.getInt("dungeons.layerprio", 10));
+	        set.setHideByDefault(cfg.getBoolean("dungeons.hidebydefault", false));
+	 
+	        /* Now retrieve the dungeons list and create markers */
+	        ico = getIcon("dungeons");
+	        if(ico != null) {
+		        for( World world: Bukkit.getWorlds() ) {
+		        	log.info("Processing world: " + world.getName());
+			        List<Dungeon> dungeons = Dungeon.getDungeons(world, world.getWorldFolder().getPath() + File.separator + "mcdungeon_cache" + File.separator + "dungeon_scan_cache",log);
+			        if( dungeons == null ) {
+			        	log.warning("No dungeons found in world "+world.getName());
+			        } else {
+				        for( Dungeon dungeon: dungeons ) {
+					        Location blk = dungeon.getLocation();
+				            Marker dmkr = set.createMarker(dungeon.getId(), dungeon.getName(), world.getName(), 
+				                        blk.getX(), blk.getY(), blk.getZ(), ico, false);
+				            if(dmkr != null) {
+				            	String desc = dungeon.getDescription();
+				            	dmkr.setDescription(desc); /* Set popup */
+				            	dmkr.setLabel(dungeon.getName());
+				            }
+				            
+				        }
 			        }
 		        }
 	        }
         }
 
-        /* Treasure Hunts */
-        tset = markerapi.getMarkerSet("thunts.markerset");
-        if(tset == null)
-            tset = markerapi.createMarkerSet("thunts.markerset", cfg.getString("thunts.name", "Treasure Hunts"), null, false);
-        else
-            tset.setMarkerSetLabel(cfg.getString("thunts.name", "Treasure Hunts"));
-        if(tset == null) {
-            crit("Error creating treasure hunts marker set");
-            return;
+
+        if( cfg.getBoolean("thunts.enabled", true ) ) {
+	        /* Treasure Hunts */
+	        tset = markerapi.getMarkerSet("thunts.markerset");
+	        if(tset == null)
+	            tset = markerapi.createMarkerSet("thunts.markerset", cfg.getString("thunts.name", "Treasure Hunts"), null, false);
+	        else
+	            tset.setMarkerSetLabel(cfg.getString("thunts.name", "Treasure Hunts"));
+	        if(tset == null) {
+	            crit("Error creating treasure hunts marker set");
+	            return;
+	        }
+	        minzoom = cfg.getInt("thunts.minzoom", 0);
+	        if(minzoom > 0)
+	            tset.setMinZoom(minzoom);
+	        tset.setLayerPriority(cfg.getInt("thunts.layerprio", 10));
+	        tset.setHideByDefault(cfg.getBoolean("thunts.hidebydefault", false));
+            ico = getIcon("thunts");
+        } else { ico = null; }
+        
+        if( cfg.getBoolean("waypoints.enabled", true ) ) {
+        	/* Waypoints */
+	        wset = markerapi.getMarkerSet("waypoints.markerset");
+	        if(wset == null)
+	            wset = markerapi.createMarkerSet("waypoints.markerset", cfg.getString("waypoints.name", "Waypoints"), null, false);
+	        else
+	            wset.setMarkerSetLabel(cfg.getString("waypoints.name", "Waypoints"));
+	        if(wset == null) {
+	            crit("Error creating treasure hunt waypoints marker set");
+	            return;
+	        }
+	        minzoom = cfg.getInt("waypoints.minzoom", 0);
+	        if(minzoom > 0)
+	            wset.setMinZoom(minzoom);
+	        wset.setLayerPriority(cfg.getInt("waypoints.layerprio", 11));
+	        wset.setHideByDefault(cfg.getBoolean("waypoints.hidebydefault", true));
+    	    wico = getIcon("waypoints");
+        } else { wico = null; }
+
+        if( (ico!=null) || (wico!=null) ) {
+
+	        for( World world: Bukkit.getWorlds() ) {
+	        	log.info("Processing world: " + world.getName());
+		        List<Dungeon> thunts = Dungeon.getDungeons(world, world.getWorldFolder().getPath() + File.separator + "mcdungeon_cache" + File.separator + "thunt_scan_cache",log);
+		        if( thunts == null ) {
+		        	log.warning("No Treasure Hunts found in world "+world.getName());
+		        } else {
+			        for( Dungeon thunt: thunts ) {
+			        	if( ico!=null) {
+			        		/* add treasure hunt */
+					        Location blk = thunt.getLocation();
+				            Marker dmkr = set.createMarker(thunt.getId(), thunt.getName(), world.getName(), 
+				                        blk.getX(), blk.getY(), blk.getZ(), ico, false);
+				            if(dmkr != null) {
+				            	String desc = thunt.getTHDescription();
+				            	dmkr.setDescription(desc); /* Set popup */
+				            	dmkr.setLabel(thunt.getName());
+				            }
+			        	}
+			        	if(wico!=null) {
+			        		/* add waypoints */
+			        	}
+			        }
+		        }
+	        }
         }
-        minzoom = cfg.getInt("thunts.minzoom", 0);
-        if(minzoom > 0)
-            tset.setMinZoom(minzoom);
-        tset.setLayerPriority(cfg.getInt("thunts.layerprio", 10));
-        tset.setHideByDefault(cfg.getBoolean("thunts.hidebydefault", false));
-        
-        /* Waypoints */
-        
         
         /* Finished! */
         info("Dynmap-MCDungeon version " + this.getDescription().getVersion() + " is activated");

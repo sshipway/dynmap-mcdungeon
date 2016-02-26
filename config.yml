@@ -7,14 +7,20 @@ dungeons:
   # (optional) set minimum zoom level before layer is visible (0 = defalt, always visible)
   minzoom: 0
   # Icon
-  icon:
+  icon: tower
+  # Completely disable the layer by using 'false'
+  enabled: true
 thunts:
   name: "Treasure Hunts"
   hidebydefault: false
   layerprio: 3
   minzoom: 0
+  icon: chest
+  enabled: true
 waypoints:
   name: "Waypoints"
   hidebydefault: true
   layerprio: 4
   minzoom: 3
+  icon: star
+  enabled: true
