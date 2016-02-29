@@ -3,7 +3,9 @@ package org.steveshipway.dynmap;
 import java.io.File;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+//import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -22,6 +24,7 @@ import org.dynmap.markers.Marker;
 import org.dynmap.markers.MarkerAPI;
 import org.dynmap.markers.MarkerIcon;
 import org.dynmap.markers.MarkerSet;
+import org.dynmap.markers.PolyLineMarker;
 
 public class DynmapMCDungeon extends JavaPlugin {
     private static Logger log;
@@ -183,7 +186,7 @@ public class DynmapMCDungeon extends JavaPlugin {
 			        } else {
 				        for( Dungeon dungeon: dungeons ) {
 					        Location blk = dungeon.getLocation();
-				            Marker dmkr = set.createMarker(dungeon.getId(), dungeon.getName(), world.getName(), 
+				            Marker dmkr = set.createMarker(dungeon.getId(), dungeon.getName(), true, world.getName(), 
 				                        blk.getX(), blk.getY(), blk.getZ(), ico, false);
 				            if(dmkr != null) {
 				            	String desc = dungeon.getDescription();
@@ -247,9 +250,11 @@ public class DynmapMCDungeon extends JavaPlugin {
 			        for( Dungeon thunt: thunts ) {
 			        	if( ico!=null) {
 			        		/* add treasure hunt */
-					        Location blk = thunt.getLocation();
-				            Marker dmkr = set.createMarker(thunt.getId(), thunt.getName(), world.getName(), 
-				                        blk.getX(), blk.getY(), blk.getZ(), ico, false);
+				            Marker dmkr = tset.createMarker(thunt.getId(), thunt.getName(), true, world.getName(), 
+							        	thunt.getWaypoints().get(0).get("x"),
+							        	thunt.getWaypoints().get(0).get("y"),
+							        	thunt.getWaypoints().get(0).get("z"),
+				                        ico, false);
 				            if(dmkr != null) {
 				            	String desc = thunt.getTHDescription();
 				            	dmkr.setDescription(desc); /* Set popup */
@@ -257,7 +262,33 @@ public class DynmapMCDungeon extends JavaPlugin {
 				            }
 			        	}
 			        	if(wico!=null) {
-			        		/* add waypoints */
+			        		/* add waypoints and line */
+			        		int i = 0;
+				            double xarr[] = new double[thunt.getLevels()];
+				            double yarr[] = new double[thunt.getLevels()];
+				            double zarr[] = new double[thunt.getLevels()];
+
+			        		for( Map<String,Integer> m: thunt.getWaypoints() ) {
+					            xarr[i] = m.get("x");
+					            yarr[i] = m.get("y");
+					            zarr[i] = m.get("z");
+			        			if( i > 0 ) {
+						            Marker dmkr = wset.createMarker(thunt.getId()+"_"+i, thunt.getName()+"<BR>\nStep "+i, true, world.getName(), 
+					                    m.get("x"),m.get("y"),m.get("z"), wico, false);
+						            if(dmkr != null) {
+						            //	String desc = thunt.getTHDescription();
+						            //	dmkr.setDescription(desc); /* Set popup */
+						            	dmkr.setLabel("Step "+i);
+						            }
+			        			}
+					            i += 1;
+			        		}
+				            PolyLineMarker pmkr = wset.createPolyLineMarker(thunt.getId()+"_line", "", true, world.getName(), 
+			            		xarr,yarr,zarr,
+			            		false);
+				            if( pmkr == null ) {
+				            	log.warning("Error creating polyline marker: "+thunt.getLevels()+" steps");
+				            }
 			        	}
 			        }
 		        }

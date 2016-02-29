@@ -17,7 +17,7 @@ public class Dungeon {
 	private int sizex;
 	private int sizez;
 	private int levels;
-	private List<Object> waypoints;
+	private List<Map<String,Integer>> waypoints;
 	
 	// Static function to read the MCDungeon cache and return a list of Dungeon objects.
 	//@SuppressWarnings("unchecked")
@@ -50,7 +50,7 @@ public class Dungeon {
         	int eh = 0;
         	int x,y,z;
     		Map<String,Object> dinfo = new HashMap<String,Object>();
-    		List<Object> wp = null;
+    		List<Map<String,Integer>> wp = null;
 
     		if( ! chest.getClass().getSimpleName().endsWith("HashMap") ) {
     			log.warning("Not a HashMap object in the cache: Probably the unpickling failed");
@@ -157,7 +157,7 @@ public class Dungeon {
 
 			try {
 				if( dinfo.containsKey("landmarks") ) {
-					wp = (List<Object>) ((HashMap<String,Object>)dinfo.get("landmarks")).values();
+					wp = (List<Map<String, Integer>>) dinfo.get("landmarks");
 				}
 			} catch( Exception e ) {
         		log.warning("Problem parsing waypoints content: "+e.getClass().getSimpleName());
@@ -191,7 +191,7 @@ public class Dungeon {
 		setLevels(lvl);
 		waypoints = null;
 	}
-	Dungeon(String n, World w, int x, int y, int z, int sx, int sz, int lvl,List<Object> wp) {
+	Dungeon(String n, World w, int x, int y, int z, int sx, int sz, int lvl,List<Map<String,Integer>> wp) {
 		name = n;
 		loc = new Location(w, x, y, z);
 		sizex = sx;
@@ -202,7 +202,7 @@ public class Dungeon {
 	public Location getLocation() {
 		return loc;
 	}
-	public List<Object> getWaypoints() {
+	public List<Map<String,Integer>> getWaypoints() {
 		return waypoints;
 	}
 	public String getId() {
@@ -214,12 +214,12 @@ public class Dungeon {
 	}
 	public String getDescription() {
 		String d;
-		d = this.name + ",\n" + sizex + " x " + sizez + ",\n" + levels + " lvls";
+		d = this.name + ",<BR>\n" + sizex + " x " + sizez + ",<BR>\n" + levels + " lvls";
 		return d;
 	}
 	public String getTHDescription() {
 		String d;
-		d = this.name + ",\n" + this.levels + " steps";
+		d = this.name + ",<BR>\n" + this.levels + " steps";
 		return d;
 	}
 	public int getLevels() {

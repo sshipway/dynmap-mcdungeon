@@ -102,10 +102,12 @@ public class PickleLoader {
         	pickle = (PyDictionary) cPickle.loads(pstr);
         } catch( PyException e ) {  
         	Pattern p = Pattern.compile("S'(portal_exit|entrance_pos|pos)'",0);
+        	Pattern pl = Pattern.compile("S'landmarks'",0);
         	Pattern px = Pattern.compile("S'x'\\nI(-?\\d+)",0);
         	Pattern py = Pattern.compile("S'y'\\nI(-?\\d+)",0);
         	Pattern pz = Pattern.compile("S'z'\\nI(-?\\d+)",0);
         	Matcher m = p.matcher(str);
+        	Matcher ml = pl.matcher(str);
         	if( m.find() ) {
         		// handle Python 2.7 pickled Vec format.
         		try {
@@ -124,7 +126,22 @@ public class PickleLoader {
         			return null;
         		}
         		return data;
+        	} else if( ml.find() ) {
+        		List<Map<String,Integer>> waypoints = new ArrayList<Map<String,Integer>>();
+        		Map<String,Integer> wp = null;
+        		Pattern pxz = Pattern.compile("S'x'\\nI(-?\\d+)\\nsS'z'\\nI(-?\\d+)",0);
+        		Matcher wm = pxz.matcher(str);
+        		while( wm.find() ) {  // recursively look for waypointish things
+        			wp = new HashMap<String,Integer>();
+        			wp.put("x", Integer.parseInt( wm.group(1) ));
+        			wp.put("z", Integer.parseInt( wm.group(2) ));
+        			wp.put("y", 64 ); // why cant I find Y??
+        			waypoints.add(wp);
+        		}
+        		data.put("landmarks", waypoints);
+        		return data;
         	} else {
+        		// at this point, we might be able to handle the alternative landmarks format
             	log.warning("Unable to parse picklestring!");
             	return null;        	
         	}
