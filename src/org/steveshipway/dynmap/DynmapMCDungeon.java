@@ -130,7 +130,8 @@ public class DynmapMCDungeon extends JavaPlugin {
     }
     
     // Start the plugin, populate the markers
-    private void activate() {
+    @SuppressWarnings("deprecation")
+	private void activate() {
     	int minzoom;
     	MarkerIcon ico,wico;
         Plugin mvplugin;
@@ -149,7 +150,9 @@ public class DynmapMCDungeon extends JavaPlugin {
         	log.info("Multiverse detected: identifying all the worlds using getMVWorlds()");
             MVWorldManager wm = ((MultiverseCore)mvplugin).getMVWorldManager();
             worlds = new ArrayList<World>();
-            
+            while( ! ((MultiverseCore) mvplugin).isInitialized() ) { 
+            	try { Thread.sleep(100); } catch (InterruptedException e) { break; } 
+            }
             for( MultiverseWorld mvworld :  wm.getMVWorlds() ) {
             	log.info("Adding world "+ mvworld.getCBWorld().getName());
                 worlds.add(mvworld.getCBWorld());
