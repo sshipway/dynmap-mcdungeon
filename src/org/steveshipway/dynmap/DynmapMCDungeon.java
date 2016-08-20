@@ -28,6 +28,7 @@ import org.dynmap.markers.MarkerSet;
 import org.dynmap.markers.PolyLineMarker;
 
 import com.onarandombox.MultiverseCore.MultiverseCore;
+import com.onarandombox.MultiverseCore.api.MVWorldManager;
 import com.onarandombox.MultiverseCore.api.MultiverseWorld;
 import com.onarandombox.MultiverseCore.utils.WorldManager;
 
@@ -143,15 +144,17 @@ public class DynmapMCDungeon extends JavaPlugin {
         }
 
         /* get multiverse */
-        mvplugin = getServer().getPluginManager().getPlugin("MultiverseCore"); 
+        mvplugin = getServer().getPluginManager().getPlugin("Multiverse-Core"); 
         if (mvplugin instanceof MultiverseCore) {
             /* the multiverse is (MultiverseCore)mvplugin  */
-            WorldManager wm = new WorldManager((MultiverseCore)mvplugin);
+        	log.info("Multiverse detected: identifying all the worlds using getMVWorlds()");
+            MVWorldManager wm = ((MultiverseCore)mvplugin).getMVWorldManager();
             worlds = new ArrayList<World>();
             for( MultiverseWorld mvworld : wm.getMVWorlds() ) {
                 worlds.add(mvworld.getCBWorld());
             }
         } else {
+        	log.info("Multiverse NOT FOUND - using standard Bukkit API");
             worlds = Bukkit.getWorlds() ;
         }
         
