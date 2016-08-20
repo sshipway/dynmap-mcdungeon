@@ -30,7 +30,6 @@ import org.dynmap.markers.PolyLineMarker;
 import com.onarandombox.MultiverseCore.MultiverseCore;
 import com.onarandombox.MultiverseCore.api.MVWorldManager;
 import com.onarandombox.MultiverseCore.api.MultiverseWorld;
-import com.onarandombox.MultiverseCore.utils.WorldManager;
 
 public class DynmapMCDungeon extends JavaPlugin {
     private static Logger log;
@@ -150,9 +149,12 @@ public class DynmapMCDungeon extends JavaPlugin {
         	log.info("Multiverse detected: identifying all the worlds using getMVWorlds()");
             MVWorldManager wm = ((MultiverseCore)mvplugin).getMVWorldManager();
             worlds = new ArrayList<World>();
-            for( MultiverseWorld mvworld : wm.getMVWorlds() ) {
+            
+            for( MultiverseWorld mvworld :  wm.getMVWorlds() ) {
+            	log.info("Adding world "+ mvworld.getCBWorld().getName());
                 worlds.add(mvworld.getCBWorld());
             }
+            log.info("No more worlds known.");
         } else {
         	log.info("Multiverse NOT FOUND - using standard Bukkit API");
             worlds = Bukkit.getWorlds() ;
