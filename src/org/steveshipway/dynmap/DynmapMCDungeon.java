@@ -3,6 +3,7 @@ package org.steveshipway.dynmap;
 import java.io.File;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.ArrayList;
 //import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -25,6 +26,10 @@ import org.dynmap.markers.MarkerAPI;
 import org.dynmap.markers.MarkerIcon;
 import org.dynmap.markers.MarkerSet;
 import org.dynmap.markers.PolyLineMarker;
+
+import com.onarandombox.MultiverseCore.MultiverseCore;
+import com.onarandombox.MultiverseCore.api.MultiverseWorld;
+import com.onarandombox.MultiverseCore.utils.WorldManager;
 
 public class DynmapMCDungeon extends JavaPlugin {
     private static Logger log;
@@ -128,11 +133,26 @@ public class DynmapMCDungeon extends JavaPlugin {
     private void activate() {
     	int minzoom;
     	MarkerIcon ico,wico;
+        Plugin mvplugin;
+        List<World> worlds = null;
     	
         markerapi = api.getMarkerAPI();
         if(markerapi == null) {
             crit("Error loading dynmap marker API!");
             return;
+        }
+
+        /* get multiverse */
+        mvplugin = getServer().getPluginManager().getPlugin("MultiverseCore"); 
+        if (mvplugin instanceof MultiverseCore) {
+            /* the multiverse is (MultiverseCore)mvplugin  */
+            WorldManager wm = new WorldManager((MultiverseCore)mvplugin);
+            worlds = new ArrayList<World>();
+            for( MultiverseWorld mvworld : wm.getMVWorlds() ) {
+                worlds.add(mvworld.getCBWorld());
+            }
+        } else {
+            worlds = Bukkit.getWorlds() ;
         }
         
         /* Load configuration */
@@ -178,7 +198,7 @@ public class DynmapMCDungeon extends JavaPlugin {
 	        /* Now retrieve the dungeons list and create markers */
 	        ico = getIcon("dungeons");
 	        if(ico != null) {
-		        for( World world: Bukkit.getWorlds() ) {
+		        for( World world: worlds ) {
 		        	log.info("Processing world: " + world.getName());
 			        List<Dungeon> dungeons = Dungeon.getDungeons(world, world.getWorldFolder().getPath() + File.separator + "mcdungeon_cache" + File.separator + "dungeon_scan_cache",log);
 			        if( dungeons == null ) {
@@ -241,7 +261,7 @@ public class DynmapMCDungeon extends JavaPlugin {
 
         if( (ico!=null) || (wico!=null) ) {
 
-	        for( World world: Bukkit.getWorlds() ) {
+	        for( World world: worlds ) {
 	        	log.info("Processing world: " + world.getName());
 		        List<Dungeon> thunts = Dungeon.getDungeons(world, world.getWorldFolder().getPath() + File.separator + "mcdungeon_cache" + File.separator + "thunt_scan_cache",log);
 		        if( thunts == null ) {
