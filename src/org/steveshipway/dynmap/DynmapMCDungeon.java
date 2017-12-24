@@ -130,7 +130,7 @@ public class DynmapMCDungeon extends JavaPlugin {
     }
     
     // Start the plugin, populate the markers
-    @SuppressWarnings("deprecation")
+    //@SuppressWarnings("deprecation")
 	private void activate() {
     	int minzoom;
     	MarkerIcon ico,wico;
@@ -145,19 +145,21 @@ public class DynmapMCDungeon extends JavaPlugin {
 
         /* get multiverse */
         mvplugin = getServer().getPluginManager().getPlugin("Multiverse-Core"); 
-        if (mvplugin instanceof MultiverseCore) {
+        if (mvplugin instanceof MultiverseCore ) {
             /* the multiverse is (MultiverseCore)mvplugin  */
         	log.info("Multiverse detected: identifying all the worlds using getMVWorlds()");
-            MVWorldManager wm = ((MultiverseCore)mvplugin).getMVWorldManager();
+
             worlds = new ArrayList<World>();
-            while( ! ((MultiverseCore) mvplugin).isInitialized() ) { 
-            	try { Thread.sleep(100); } catch (InterruptedException e) { break; } 
-            }
+            //while( ! ((MultiverseCore) mvplugin).isEnabled() ) {
+            //	try { Thread.sleep(1000); } catch (InterruptedException e) { break; }
+            //	log.info(".. waiting for Multiverse ..");
+            //}
+            MVWorldManager wm = ((MultiverseCore)mvplugin).getMVWorldManager();
             for( MultiverseWorld mvworld :  wm.getMVWorlds() ) {
-            	log.info("Adding world "+ mvworld.getCBWorld().getName());
+            	log.info("- Adding world "+ mvworld.getCBWorld().getName());
                 worlds.add(mvworld.getCBWorld());
             }
-            log.info("No more worlds known.");
+            log.info("- No more worlds known.");
         } else {
         	log.info("Multiverse NOT FOUND - using standard Bukkit API");
             worlds = Bukkit.getWorlds() ;
@@ -208,11 +210,12 @@ public class DynmapMCDungeon extends JavaPlugin {
 	        if(ico != null) {
 		        for( World world: worlds ) {
 		        	log.info("Processing world: " + world.getName());
-			        List<Dungeon> dungeons = Dungeon.getDungeons(world, world.getWorldFolder().getPath() + File.separator + "mcdungeon_cache" + File.separator + "dungeon_scan_cache",log);
+			        List<Dungeon> dungeons = Dungeon.getDungeons(world, world.getWorldFolder().getPath() + File.separator + "mcdungeon_cache"+ File.separator + "dungeon_scan_cache.yaml",log);
 			        if( dungeons == null ) {
-			        	log.warning("No dungeons found in world "+world.getName());
+			        	log.warning("- MCDungeon has not been run on world "+world.getName()+", or else is too old a version.");
 			        } else {
 				        for( Dungeon dungeon: dungeons ) {
+				        	log.info("- Adding dungeon "+dungeon.getName() + " with " + dungeon.getLevels() + " levels");
 					        Location blk = dungeon.getLocation();
 				            Marker dmkr = set.createMarker(dungeon.getId(), dungeon.getName(), true, world.getName(), 
 				                        blk.getX(), blk.getY(), blk.getZ(), ico, false);
@@ -271,17 +274,18 @@ public class DynmapMCDungeon extends JavaPlugin {
 
 	        for( World world: worlds ) {
 	        	log.info("Processing world: " + world.getName());
-		        List<Dungeon> thunts = Dungeon.getDungeons(world, world.getWorldFolder().getPath() + File.separator + "mcdungeon_cache" + File.separator + "thunt_scan_cache",log);
+		        List<Dungeon> thunts = Dungeon.getDungeons(world, world.getWorldFolder().getPath() + File.separator + "mcdungeon_cache" + File.separator + "thunt_scan_cache.yaml",log);
 		        if( thunts == null ) {
-		        	log.warning("No Treasure Hunts found in world "+world.getName());
+		        	log.warning("- No Treasure Hunts found in world "+world.getName());
 		        } else {
 			        for( Dungeon thunt: thunts ) {
+			        	log.info("- Adding treasure hunt "+thunt.getName() + " with " +thunt.getLevels() + " steps");
 			        	if( ico!=null) {
 			        		/* add treasure hunt */
 				            Marker dmkr = tset.createMarker(thunt.getId(), thunt.getName(), true, world.getName(), 
-							        	thunt.getWaypoints().get(0).get("x"),
+							        	thunt.getWaypoints().get(0).get("x")+8,
 							        	thunt.getWaypoints().get(0).get("y"),
-							        	thunt.getWaypoints().get(0).get("z"),
+							        	thunt.getWaypoints().get(0).get("z")+8,
 				                        ico, false);
 				            if(dmkr != null) {
 				            	String desc = thunt.getTHDescription();
@@ -297,12 +301,13 @@ public class DynmapMCDungeon extends JavaPlugin {
 				            double zarr[] = new double[thunt.getLevels()];
 
 			        		for( Map<String,Integer> m: thunt.getWaypoints() ) {
-					            xarr[i] = m.get("x");
+			        			log.info("-- Waypoint " + i + " of " + thunt.getLevels() + " at " + (m.get("x")+8) + "," + (m.get("z")+8));
+					            xarr[i] = m.get("x")+8;
 					            yarr[i] = m.get("y");
-					            zarr[i] = m.get("z");
+					            zarr[i] = m.get("z")+8;
 			        			if( i > 0 ) {
 						            Marker dmkr = wset.createMarker(thunt.getId()+"_"+i, thunt.getName()+"<BR>\nStep "+i, true, world.getName(), 
-					                    m.get("x"),m.get("y"),m.get("z"), wico, false);
+					                    m.get("x")+8,m.get("y"),m.get("z")+8, wico, false);
 						            if(dmkr != null) {
 						            //	String desc = thunt.getTHDescription();
 						            //	dmkr.setDescription(desc); /* Set popup */
@@ -315,7 +320,7 @@ public class DynmapMCDungeon extends JavaPlugin {
 			            		xarr,yarr,zarr,
 			            		false);
 				            if( pmkr == null ) {
-				            	log.warning("Error creating polyline marker: "+thunt.getLevels()+" steps");
+				            	log.warning("- Error creating polyline marker: "+thunt.getLevels()+" steps");
 				            }
 			        	}
 			        }

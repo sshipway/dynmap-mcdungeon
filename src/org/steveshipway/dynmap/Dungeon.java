@@ -17,158 +17,117 @@ public class Dungeon {
 	private int sizex;
 	private int sizez;
 	private int levels;
-	private List<Map<String,Integer>> waypoints;
+	private ArrayList<Map<String,Integer>> waypoints;
 	
 	// Static function to read the MCDungeon cache and return a list of Dungeon objects.
 	//@SuppressWarnings("unchecked")
 	@SuppressWarnings({ "unchecked" })
-	public static List<Dungeon> getDungeons(World w, String filename, Logger log) {
+	public static List<Dungeon> getDungeons(World w, String pathname, Logger log) {
 		List<Dungeon> dlst = new ArrayList<Dungeon>();
 		
-		File f = new File(filename);
-		if( ! f.exists() ) { return null; }
+		File f = new File(pathname );
+		if( ! f.exists() ) {
+			log.warning("- MCDungeon Dungeon cache file missing!");
+			return null; 
+		}
 		
-		log.info("Loading in MCDungeon cache file from " + filename);
+		log.info("- Loading in MCDungeon cache file from " + pathname);
 		
-        PickleLoader loader = new PickleLoader();
-        HashMap<String, Object> loaded = loader.getDataFileStream(filename,log);
+        YamlLoader loader = new YamlLoader();
+        HashMap<String, Object> loaded = loader.getYamlFromFile(f,log);
         
         if( loaded == null ) {
-        	log.warning("Unable to read MCDungeon cache file.  Maybe the version is too old?");
+        	log.warning("-- Unable to read MCDungeon cache file.  Maybe the version is too old?  Need v7 cache or later with YAML format (v1.10+)");
         	return null;
         }
         
-        // Just for decrypting the file contents
-        //Gson gson = new Gson();
+
         //Type type = new TypeToken<Object>() {}.getType();
         //String json = gson.toJson(loaded, type);
         //log.info(json);
 
-        for( Object chest: loaded.values() ) { // These should all be Maps of Chest objects
+        for( Object d: loaded.values() ) { // These should all be HashMaps
         	String dname=null;
         	int dx=0,dz=0,dlevels=0;
         	int eh = 0;
         	int x,y,z;
-    		Map<String,Object> dinfo = new HashMap<String,Object>();
-    		List<Map<String,Integer>> wp = null;
 
-    		if( ! chest.getClass().getSimpleName().endsWith("HashMap") ) {
-    			log.warning("Not a HashMap object in the cache: Probably the unpickling failed");
+    		ArrayList<Map<String,Integer>> wp = null;
+
+    		if( ! d.getClass().getSimpleName().endsWith("HashMap") ) {
+    			log.warning("-- Not a HashMap object in the cache: Probably the YAML failed");
     			continue;
     		}
-    		
-    		if( ! ((HashMap<String,String>)chest).containsKey("CustomName") ) {
-        		log.warning("This dungeon cache entry does not look like a chest!");
+    		if( ! ((HashMap<String,String>)d).containsKey("full_name") ) {
+        		log.warning("-- This dungeon cache entry does not look correct!");
         		continue;        		
         	}
-        	if( ! ((Map<String,String>)chest).get("CustomName").startsWith("MCDungeon") ) {
-        		log.warning("This dungeon cache entry does not look like an MCDungeon chest!");
-        		continue;
-        	}
-        	// log.info("Processing a dungeon chest...");
-        	List<HashMap<String,Object>> items = (((HashMap<String,List<HashMap<String,Object>>>)chest).get("Items"));
-        	if( items == null ) { 
-        		log.warning("This chest has no items!");
-        		continue; 
-        	}
-        	for( HashMap<String,Object> book: items ) {
-				if( ! book.containsKey("tag") ) {
-            		log.warning("This item has no tag!");
-            		continue;         			
-        		}
-        		if( ! ((Map<String,Object>)(book.get("tag"))).containsKey("title") ) {
-            		log.warning("This item is not a book!");
-            		continue;         			
-        		}
-        		if( ! ((String)(((Map<String,Object>)(book.get("tag"))).get("title"))).startsWith("MCDungeon") ) {
-            		log.warning("This book is not an MCDungeon book!");
-            		continue;         			
-        		}
-//            	log.info("Processing a book...");
-        		List<String> pages = (List<String>)((Map<String,Object>)(book.get("tag"))).get("pages");
-        		for( String page: pages ) {
-//                	log.info("Processing a page...");
-                	try {
-	        			Map<String,Object> pagedata = (Map<String,Object>)loader.getDataString(page,log);
-	        			if( pagedata != null ) {
-	        				dinfo.putAll(pagedata);
-	        			} else {
-	        				log.warning("Page was unable to be unpickled:\n"+page);
-	        			}
-                	} catch( Exception e ) {
-                		log.warning("Unable to load page for some reason! "+e.getClass().getSimpleName());
-                	}
-        		}
-        	}
-        	
-        	//log.info("dinfo keys present:");
-        	//for( String k: dinfo.keySet()) {
-        	//	log.info("  " + k + " = " + dinfo.get(k).toString());
-        	//}
+        	// log.info("Processing a dungeon entry...");
 
         	try {
-				if( dinfo.containsKey("full_name") ) {
-					dname = (String)dinfo.get("full_name");
+				if( ((HashMap<String,Object>)d).containsKey("full_name") ) {
+					dname = ((HashMap<String,String>)d).get("full_name");
 				}
-				if( dinfo.containsKey("levels") ) { // for dungeons
-					dlevels = (Integer)dinfo.get("levels");
+				if( ((HashMap<String,Object>)d).containsKey("levels") ) { // for dungeons
+					dlevels = ((HashMap<String,Integer>)d).get("levels");
 				}
-				if( dinfo.containsKey("steps") ) { // for thunts
-					dlevels = (Integer)dinfo.get("steps");
+				if( ((HashMap<String,Object>)d).containsKey("steps") ) { // for thunts
+					dlevels = ((HashMap<String,Integer>)d).get("steps");
 				}
-			    if( dinfo.containsKey("xsize") ) {
-					dx = (Integer)dinfo.get("xsize");
+			    if( ((HashMap<String,Object>)d).containsKey("xsize") ) {
+					dx = ((HashMap<String,Integer>)d).get("xsize");
 				}
-				if( dinfo.containsKey("zsize") ) {
-					dz = (Integer)dinfo.get("zsize");
+				if( ((HashMap<String,Object>)d).containsKey("zsize") ) {
+					dz = ((HashMap<String,Integer>)d).get("zsize");
 				}
-				if( dinfo.containsKey("entrace_height") ) {
-					eh = (Integer)dinfo.get("entrace_height");
+				if( ((HashMap<String,Object>)d).containsKey("entrace_height") ) {
+					eh = ((HashMap<String,Integer>)d).get("entrace_height");
 				}
         	} catch( Exception e ) {
-        		log.warning("Problem parsing cache content (A): "+e.getMessage());
+        		log.warning("-- Problem parsing cache content (A): "+e.getMessage());
         		continue;
         	}
 
 			try {
-				x = ((HashMap<String,Integer>)chest).get("x");
-				y = ((HashMap<String,Integer>)chest).get("y");
-				z = ((HashMap<String,Integer>)chest).get("z");
+
+				x = ((HashMap<String,Integer>)(((HashMap<String,Object>)d).get("position"))).get("x");
+				y = ((HashMap<String,Integer>)(((HashMap<String,Object>)d).get("position"))).get("y");
+				z = ((HashMap<String,Integer>)(((HashMap<String,Object>)d).get("position"))).get("z");
 				
 				//log.info("Dungeon "+dname+" at "+x+","+y+","+z);
 				
-				if( dinfo.containsKey("portal_exit") ) {
-					x += ((HashMap<String,Integer>)(dinfo.get("portal_exit"))).get("x");
-					y -= ((HashMap<String,Integer>)(dinfo.get("portal_exit"))).get("y");
-					z += ((HashMap<String,Integer>)(dinfo.get("portal_exit"))).get("z");
-				} else if( dinfo.containsKey("entrance_pos") ) {
-					x += (((HashMap<String,Integer>)(dinfo.get("entrace_pos"))).get("x") << 4) + 8;				
+				if( ((HashMap<String,Object>)d).containsKey("portal_exit") ) {
+					x += ((HashMap<String,Integer>)(((HashMap<String,Object>)d).get("portal_exit"))).get("x");
+					y -= ((HashMap<String,Integer>)(((HashMap<String,Object>)d).get("portal_exit"))).get("y");
+					z += ((HashMap<String,Integer>)(((HashMap<String,Object>)d).get("portal_exit"))).get("z");
+				} else if( ((HashMap<String,Object>)d).containsKey("entrance_pos") ) {
+					x += (((HashMap<String,Integer>)(((HashMap<String,Object>)d).get("entrace_pos"))).get("x") << 4) + 8;				
 					y += eh;
-					z += (((HashMap<String,Integer>)(dinfo.get("entrace_pos"))).get("z") << 4) + 8;				
+					z += (((HashMap<String,Integer>)(((HashMap<String,Object>)d).get("entrace_pos"))).get("z") << 4) + 8;				
 				} else {
 //					log.warning("Unable to identify portal exit or entrance position for dungeon '"+dname+"'");
 					// treasure hunt
 					x += 8; z += 8; // middle of chunk
 				}
         	} catch( Exception e ) {
-        		log.warning("Problem parsing cache content (B)");
+        		log.warning("-- Problem parsing cache content (B): " + e.getMessage());
         		continue;
         	}
 
 			try {
-				if( dinfo.containsKey("landmarks") ) {
-					wp = (List<Map<String, Integer>>) dinfo.get("landmarks");
+				if( ((HashMap<String,Object>)d).containsKey("landmarks") ) {
+					wp = loader.getWaypoints( (String) ((HashMap<String,Object>)d).get("landmarks") ,log);
 				}
 			} catch( Exception e ) {
-        		log.warning("Problem parsing waypoints content: "+e.getClass().getSimpleName());
+        		log.warning("-- Problem parsing waypoints content: "+e.getClass().getSimpleName());
         		e.printStackTrace();
-        		log.info( dinfo.get("landmarks").toString());
+        		log.info(  ((HashMap<String,Object>)d).get("landmarks").toString());
 			}
 			
         	if( (dlevels > 0) && (dname != null) ) {
         		dlst.add(new Dungeon(dname,w, x,y,z ,dx,dz,dlevels,wp));
         	} else {
-        		log.warning("Invalid dungeon cache ignored!");
+        		log.warning("-- Invalid dungeon cache ignored!");
         	}
         }
         
@@ -191,7 +150,7 @@ public class Dungeon {
 		setLevels(lvl);
 		waypoints = null;
 	}
-	Dungeon(String n, World w, int x, int y, int z, int sx, int sz, int lvl,List<Map<String,Integer>> wp) {
+	Dungeon(String n, World w, int x, int y, int z, int sx, int sz, int lvl,ArrayList<Map<String,Integer>> wp) {
 		name = n;
 		loc = new Location(w, x, y, z);
 		sizex = sx;
@@ -202,7 +161,7 @@ public class Dungeon {
 	public Location getLocation() {
 		return loc;
 	}
-	public List<Map<String,Integer>> getWaypoints() {
+	public ArrayList<Map<String,Integer>> getWaypoints() {
 		return waypoints;
 	}
 	public String getId() {
