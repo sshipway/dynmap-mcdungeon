@@ -1,5 +1,12 @@
 name: DynmapMCDungeon
 main: org.steveshipway.dynmap.DynmapMCDungeon
-version: 2.0
-author: sshipway
-depend: [ dynmap, Multiverse-Core ]
+version: 2.1
+author: sshipway 
+website: http://www.stevesipway.org/
+depend: [ dynmap ]
+softdepend: [ Multiverse-Core ]
+description: This plugin displays Dungeons created by MCDungeon on the Dynmap 
+commands:
+  mcd:
+    description: Reload the MCDungeon cache information and recreate the Dynmap markers
+    usage: /mcd reload

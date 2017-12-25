@@ -18,6 +18,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.server.PluginEnableEvent;
+import org.bukkit.event.world.WorldLoadEvent;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.PluginManager;
 import org.dynmap.DynmapAPI;
@@ -67,14 +68,17 @@ public class DynmapMCDungeon extends JavaPlugin {
         }
         api = (DynmapAPI)dynmap; /* Get API */
         info("detected Dynmap API version " + api.getDynmapVersion() );
-        
-        getServer().getPluginManager().registerEvents(new OurServerListener(), this);
+
         /* If both enabled, activate */
         if(dynmap.isEnabled()) {
             activate();
         } else {
-        	info("waiting for Dynmap to activate");
+        	info("waiting for Dynmap to activate"); // this should never happen if the plugins are loaded right
         }
+        info("Enabling event listener and /mcd reload command");
+        getServer().getPluginManager().registerEvents(new OurServerListener(), this);
+        this.getCommand("mcd").setExecutor(new CommandMcd());
+        
 
     }
     // Fired when plugin is disabled: clean up markers
@@ -94,8 +98,8 @@ public class DynmapMCDungeon extends JavaPlugin {
         }
     }
     
-    // listen for dynmap startup, if it happens after
     private class OurServerListener implements Listener {
+        // listen for dynmap startup, if it happens after
         @EventHandler(priority=EventPriority.MONITOR)
         public void onPluginEnable(PluginEnableEvent event) {
             Plugin p = event.getPlugin();
@@ -106,9 +110,18 @@ public class DynmapMCDungeon extends JavaPlugin {
                 }
             }
         }
+        // listen for new worlds loading
+        @EventHandler(priority=EventPriority.LOW)
+        public void onWorldLoad(WorldLoadEvent event) {
+        	World w = event.getWorld();
+        	Bukkit.getConsoleSender().sendMessage("Reloading MCDungeon markers due to world "+w.getName()+" loading.");
+        	DynmapMCDungeon thisplugin = (DynmapMCDungeon)(JavaPlugin.getPlugin(DynmapMCDungeon.class));
+        	thisplugin.activate(); // this will cause a reload of the data 
+        }
+
     }
     
-    // Determine what our Icon will be
+    // Determine what our Icon will be        
     private MarkerIcon getIcon(String itype) {
     	String deficon;
         String marker;
@@ -131,7 +144,7 @@ public class DynmapMCDungeon extends JavaPlugin {
     
     // Start the plugin, populate the markers
     //@SuppressWarnings("deprecation")
-	private void activate() {
+	void activate() {
     	int minzoom;
     	MarkerIcon ico,wico;
         Plugin mvplugin;
@@ -209,7 +222,7 @@ public class DynmapMCDungeon extends JavaPlugin {
 	        ico = getIcon("dungeons");
 	        if(ico != null) {
 		        for( World world: worlds ) {
-		        	log.info("Processing world: " + world.getName());
+		        	log.info("Processing dungeons in world: " + world.getName());
 			        List<Dungeon> dungeons = Dungeon.getDungeons(world, world.getWorldFolder().getPath() + File.separator + "mcdungeon_cache"+ File.separator + "dungeon_scan_cache.yaml",log);
 			        if( dungeons == null ) {
 			        	log.warning("- MCDungeon has not been run on world "+world.getName()+", or else is too old a version.");
@@ -273,7 +286,7 @@ public class DynmapMCDungeon extends JavaPlugin {
         if( (ico!=null) || (wico!=null) ) {
 
 	        for( World world: worlds ) {
-	        	log.info("Processing world: " + world.getName());
+	        	log.info("Processing treasure hunts in world: " + world.getName());
 		        List<Dungeon> thunts = Dungeon.getDungeons(world, world.getWorldFolder().getPath() + File.separator + "mcdungeon_cache" + File.separator + "thunt_scan_cache.yaml",log);
 		        if( thunts == null ) {
 		        	log.warning("- No Treasure Hunts found in world "+world.getName());
